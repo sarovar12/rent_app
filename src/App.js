@@ -5,11 +5,13 @@ import ForgotPassWord from './pages/ForgotPassWord';
 import Profile from './pages/Profile';
 import SignIn from './pages/SignIn';
 import SignOut from './pages/SignOut';
+import Header from './components/Header';
 
 function App() {
   return (
-    <div className="App">
+    <>
      <Router>
+      <Header/>
         <Routes>
           <Route path='/' element={<Home/>}/>
           <Route path='/profile' element={<Profile/>}/>
@@ -19,7 +21,7 @@ function App() {
           <Route path='/discounts' element={<Discounts/>}/>
         </Routes>
      </Router>
-    </div>
+    </>
   );
 }
 
