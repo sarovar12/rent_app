@@ -3,7 +3,16 @@ import { useState } from 'react'
 import {AiFillEye,AiFillEyeInvisible} from 'react-icons/ai'
 import { Link } from 'react-router-dom'
 import OAuth from '../components/OAuth'
+import { signInWithEmailAndPassword , getAuth  } from 'firebase/auth'
+import {toast} from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+
+
+
+
 export default function SignIn() {
+  const navigate = useNavigate();
   function onChange(e){
     setFormData((prevState)=>({
       ...prevState,
@@ -21,6 +30,26 @@ export default function SignIn() {
   const [showPassword, setShowPassword]= useState(false);
   const {email, password} =formData;
 
+
+ async function onSubmit(event){
+  console.log(
+    "on Submit"
+  )
+  event.preventDefault();
+  try {
+    const auth= getAuth();
+    //https://firebase.google.com/docs/auth/web/password-auth
+    const userCredentials = await signInWithEmailAndPassword(auth,email, password)
+    if(userCredentials.user){
+      navigate("/");
+      
+    }
+  } catch (error) {
+      toast.error("Incorrect User Credentials")
+  }
+  }
+
+
   return (
     <section>
       <h1 className=' text-3xl text-center mt-6 font-bold'>Sign In</h1>
@@ -29,7 +58,7 @@ export default function SignIn() {
           <img className='h-96 w-full rounded-2xl' alt='House Keys' src='https://images.pexels.com/photos/7599735/pexels-photo-7599735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'/>
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form >
+          <form onSubmit={onSubmit} >
             <input className='w-full mb-6 px-4 py-2 text-xl
              text-gray-700 bg-white border-gray-300 rounded transition ease-in-out' 
               type="email" id="email"
@@ -40,7 +69,7 @@ export default function SignIn() {
                type={ showPassword ? "text":"password"} id="password" value={password} onChange={onChange} placeholder="Password"/>
                {showPassword? 
 
-               (<AiFillEyeInvisible onClick={toggleEyes} className='absolute right-3 top-3 text-size-xl cursor-pointer'/>):
+               (<AiFillEyeInvisible onClick={(event)=>toggleEyes(event)} className='absolute right-3 top-3 text-size-xl cursor-pointer'/>):
 
                (<AiFillEye onClick={toggleEyes} className='absolute right-3 top-3 text-size-xl cursor-pointer'/>)
                }
