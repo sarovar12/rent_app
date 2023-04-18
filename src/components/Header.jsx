@@ -1,12 +1,33 @@
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import React from 'react'
+import { useEffect } from 'react';
+import { useState } from 'react';
 import {useLocation, useNavigate} from 'react-router-dom'
 
+
 export default function Header() {
+
+    const [pageState,setPageState] = useState("Sign In");
     const location = useLocation(); 
     const navigate = useNavigate(); // navigate routes and doesn't  refresh
+    const auth = getAuth();
+
+    useEffect(()=>{
+        onAuthStateChanged(auth,(user)=>{
+            if(user){
+                setPageState("Profile")
+            }
+        else{
+            setPageState("Sign In")
+        }
+
+        })
+    },[auth])
+
     function pathMatchRoute(route){
         if(route === location.pathname){
             return true;
+            
         }
     }
   return (
@@ -22,9 +43,16 @@ export default function Header() {
            
             <div className='basis-1/4 py-3'>
                 <ul className='flex content-evenly space-x-10'>
-                    <li onClick={()=>navigate("/")} className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 ${pathMatchRoute("/")?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}> Home </li>
-                    <li onClick={()=>navigate("/discounts")} className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 ${pathMatchRoute("/discounts")?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}> Special Discount </li>
-                    <li onClick={()=>navigate("/sign-in")} className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 ${pathMatchRoute("/sign-in")?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}> Sign In </li>
+                    <li onClick={()=>navigate("/")}
+                        className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 ${pathMatchRoute("/")?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}>
+                             Home </li>
+                    <li onClick={()=>navigate("/discounts")} 
+                        className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 ${pathMatchRoute("/discounts")?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}>
+                            Special Discount </li>
+                    <li onClick={()=>navigate("/profile")} 
+                        className={`cursor-pointer py-3 text-sm font-semibold border-b-red-500 
+                        ${(pathMatchRoute("/sign-in")|| pathMatchRoute("/profile"))?"text-black border-b-[3px] border-b-red-500 ":"text-gray-400 border-b-[3px] border-b-transparent"}`}> 
+                            {pageState} </li>
                     
                     
                 </ul>
