@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
-
+import React, { useEffect, useState } from 'react'
+import Spinner from '../components/Spinner';
+import { toast } from 'react-toastify';
 export default function CreateListing() {
+    const [geoLocationEnabled, setGeoLocationEnabled] = useState(false);
+    const [loading, setLoading] = useState(false);
 const [formData, setFormData] = useState({
     type:'rent',
     name:'',
@@ -13,6 +16,11 @@ const [formData, setFormData] = useState({
     offers:false,
     regularPrice:0,
     discountedPrice:0,
+    latitude:0,
+    longitude:0, 
+    images:{},
+    geoLatitude:1,
+    geoLongitude:1,
 })
 const {
     type,
@@ -24,16 +32,100 @@ const {
      address,description,
      offers,
      regularPrice,
-    discountedPrice
+    discountedPrice,
+    latitude,
+    longitude,
+    images
 }
       = formData;
-function onChange(){
+
+
+useEffect(()=>{
+    async function fetchData(){
+
+        try{
+            const res = await fetch('https://ip-api.io/json ');
+            const data = await res.json();
+            setFormData((prevState)=>({
+                ...prevState,
+                geoLatitude:data.latitude,
+                geoLongitude:data.longitude,
+            }))
+
+        }
+        catch(err){
+                
+        }
+    }
+    fetchData();
+    
+},[])
+
+
+
+
+
+
+// On Change Function      
+function onChange(event){
+    let boolean = null; 
+    if(event.target.value === "true"){
+            boolean = true;
+    }
+    if(event.target.value === "false"){
+            boolean = false;
+    }
+
+    //Files
+    if(event.target.files){
+         setFormData((prevState) => ({
+            ...prevState,
+            images: event.target.files
+            }))
+}
+//Text Boolean Number
+    if(!event.target.files){
+        setFormData((prevState) => (
+            {
+            ...prevState,
+            
+            [event.target.id] : boolean ?? event.target.value,  //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing
+            
+        }))
+    }
 
 }
+
+// On Submit Function
+
+function onSubmit(event){
+    event.preventDefault();
+    setLoading(true);
+    if(discountedPrice >= regularPrice){
+        setLoading(false);
+        toast.error('Discounted Price needs to be less than Regular Price');
+        
+        return;
+    }
+    if(images.length >6){
+        setLoading(false);
+        toast.error('Maximum of 6 images only');
+    }   
+}
+
+if(loading){
+    return(
+        <Spinner/>
+    )
+}
+
     return (
     <main className='max-w-md px-2  mx-auto'>
         <h1 className='text-3xl text-center mt-6 font-bold'> Create a Listing</h1>
-        <form>
+        <form onSubmit={onSubmit}>
+
+        {/* Sell or Rent Section */}
+
             <p className='text-lg mt-6 font-semibold'>Sell/Rent</p>
             <div className="flex">
                 <button
@@ -49,17 +141,24 @@ function onChange(){
                 hover:shadow-lg focus:shadow-lg active:shadow-lg
                 transition duration -50 ease-in-out w-full
                  ${type === 'sale'? "bg-white text-black" : "bg-slate-600 text-white" } `} 
-                 id="type" value="sale" onClick={onChange} type='button'>
+                 id="type" value="rent" onClick={onChange} type='button'>
                     rent
                 </button>
             </div>
+
+            {/* Name of the Property Section */}
+
             <p className='text-lg mt-6 font-semibold'>Name</p>
             <input type='text' id='name' value={name} onChange={onChange} placeholder='Name'
             maxLength='32' minLength='10' required
             className='w-full px-4 py-2 text-xl text-gray-700 bg-white border border-gray-300 rounded
             transition duration-200 ease-in-out
             focus:text-gray-700 focus:bg-white focus:border-slate-600 mb-6'/>
+           
+           {/* Baths and Beds Section */}
             <div className="flex space-x-6 justify-start mb-6">
+               
+                {/* Beds section  */}
                 <div >
                     <p className='w-full text-lg font-semibold'> Beds</p>
                     <input type='number' id='bedrooms'
@@ -71,6 +170,7 @@ function onChange(){
                     focus:text-gray-700 focus:bg-white
                     focus:border-slate-600 text-center'/>
                 </div>
+                {/* Baths section  */}
                 <div >
                     <p className='w-full text-lg font-semibold'> Baths</p>
                     <input type='number' id='bathrooms'
@@ -83,6 +183,8 @@ function onChange(){
                     focus:border-slate-600 text-center'/>
                 </div>
             </div>
+
+{/* Parking Spot Section */}
 
             <p className='text-lg mt-6 font-semibold'>Parking Spot</p>
             <div className="flex">
@@ -104,6 +206,7 @@ function onChange(){
                 </button>
             </div>
 
+        {/* Furnished Section */}
 
             <p className='text-lg mt-6 font-semibold'>Furnished</p>
             <div className="flex">
@@ -127,16 +230,48 @@ function onChange(){
 
             {/* Address Field */}
 
-            <p className='text-lg mt-6 font-semibold'>Description</p>
+            <p className='text-lg mt-6 font-semibold'>Address</p>
             <textarea type='text' id='address' value={address} onChange={onChange} placeholder='Address'
              required
             className='w-full px-4 py-2 text-xl text-gray-700 bg-white border border-gray-300 rounded
             transition duration-200 ease-in-out
             focus:text-gray-700 focus:bg-white focus:border-slate-600 mb-6'/>
+            
+            
+            
+            {/* Latitude and Longitude Section */}
+            {!geoLocationEnabled && (
+                <div className='flex space-x-6 justify-start mb-6 '>
+                    <div>
+                        <p className='text-lg font-semibold'>Latitude</p>
+                        <input className='
+                        w-full  px-4 py-2 text-xl text-gray-700
+                        bg-white border border-gray-300 rounded
+                        transition duration-150 ease-in-out
+                        focus:text-gray-700 focus:bg-white
+                        focus:border-slate-600 text
+                        '
+                        min="-90" max="90" type='number' id="latitude" value={latitude} onChange={onChange}
+                        required/>
+                    </div>
+                    <div className=''>
+                        <p className='text-lg font-semibold'>Longitude</p>
+                        <input className='
+                        w-full  px-4 py-2 text-xl text-gray-700
+                        bg-white border border-gray-300 rounded
+                        transition duration-150 ease-in-out
+                        focus:text-gray-700 focus:bg-white
+                        focus:border-slate-600 text
+                        '
+                        min="-180" max="180" type='number' id="longitude" value={longitude} onChange={onChange}
+                        required/>
+                    </div>
+                </div>
+            )}
 
             {/* Description Field */}
 
-            <p className='text-lg font-semibold'>Address</p>
+            <p className='text-lg font-semibold'>Description</p>
             <textarea type='text' id='description' value={description} onChange={onChange} placeholder='Description'
              required
             className='w-full px-4 py-2 text-xl text-gray-700 bg-white border border-gray-300 rounded
@@ -167,6 +302,7 @@ function onChange(){
 
 
 {/* Regular Price Section */}
+
         <div className="flex items-center mb-6">
             <div className="">
                 <p className='text-lg font-semibold'>Regular Price</p>
@@ -251,6 +387,8 @@ function onChange(){
                          transition duration-150 ease-in-out
                          focus:bg-white focus:border-slate-600'/>
                     </div> 
+
+           
                  {/*Submit Button  */}
         <button type='submit' className='mb-6 w-full px-7 py-3 bg-blue-600 text-white
         font-medium text-sm uppercase rounded shadow-md hover:bg-blue-700
@@ -258,7 +396,7 @@ function onChange(){
         active:bg-blue-900 active:shadow-lg
         transition duration-150
         ease-in-out '>
-
+            Submit Your Listing
 
         </button>
         
