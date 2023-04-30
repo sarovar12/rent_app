@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
+import { getStorage, ref, uploadBytesResumable,getDownloadURL } from "firebase/storage";
+import {getAuth} from 'firebase/auth';
+import { v4 as uuidv4 } from 'uuid';
+import {addDoc, collection, serverTimestamp} from 'firebase/firestore';
+import db  from '../firebase'
+import {  useNavigate } from 'react-router-dom';
+
 export default function CreateListing() {
-    const [geoLocationEnabled, setGeoLocationEnabled] = useState(false);
+    const navigate = useNavigate();
+    const [geoLocationEnabled, setGeoLocationEnabled] = useState(true); 
+    const [selectLocation, setSelectLocation] = useState(true);
     const [loading, setLoading] = useState(false);
 const [formData, setFormData] = useState({
     type:'rent',
@@ -21,6 +30,9 @@ const [formData, setFormData] = useState({
     images:{},
     geoLatitude:1,
     geoLongitude:1,
+    displayLatitude:1,
+    displayLongitude:1,
+
 })
 const {
     type,
@@ -35,10 +47,16 @@ const {
     discountedPrice,
     latitude,
     longitude,
-    images
+    images,
+    geoLatitude,
+    geoLongitude,
+    displayLatitude,
+    displayLongitude
 }
       = formData;
 
+
+    // API Fetching for Current Location   
 
 useEffect(()=>{
     async function fetchData(){
@@ -50,6 +68,9 @@ useEffect(()=>{
                 ...prevState,
                 geoLatitude:data.latitude,
                 geoLongitude:data.longitude,
+                displayLatitude:data.latitude,
+                displayLongitude:data.longitude,
+
             }))
 
         }
@@ -60,6 +81,17 @@ useEffect(()=>{
     fetchData();
     
 },[])
+
+
+// Display Latitude and Longitude weren't updating so this function is here, find better ways to do this
+useEffect(()=>{
+    setFormData((prevState)=>({
+        ...prevState,
+        displayLatitude:latitude,
+        displayLongitude:longitude,
+    }))
+},[latitude,longitude])
+
 
 
 
@@ -83,7 +115,7 @@ function onChange(event){
             images: event.target.files
             }))
 }
-//Text Boolean Number
+//Text, Boolean or Number
     if(!event.target.files){
         setFormData((prevState) => (
             {
@@ -96,9 +128,51 @@ function onChange(event){
 
 }
 
+//Function to Store the image
+async function storeImage(image){
+    return new Promise((resolve,reject)=>{
+        const storage = getStorage();
+        const auth = getAuth();
+        const filename= `${auth.currentUser.uid}-${image.name}-${uuidv4()}`;
+        const storageRef = ref(storage, filename);
+
+        const uploadTask = uploadBytesResumable(storageRef,image);
+
+    uploadTask.on('state_changed', 
+    (snapshot) => {
+    // Observe state change events such as progress, pause, and resume
+    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+    console.log('Upload is ' + progress + '% done');
+    switch (snapshot.state) {
+      case 'paused':
+        console.log('Upload is paused');
+        break;
+      case 'running':
+        console.log('Upload is running');
+        break;
+    }
+  }, 
+  (error) => {
+    // Handle unsuccessful uploads
+    reject(error)
+  }, 
+  () => {
+    // Handle successful uploads on complete
+    // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+    getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+      resolve(downloadURL);
+    });
+  }
+);
+
+
+    })
+}
+
 // On Submit Function
 
-function onSubmit(event){
+async function onSubmit(event){
     event.preventDefault();
     setLoading(true);
     if(discountedPrice >= regularPrice){
@@ -111,13 +185,45 @@ function onSubmit(event){
         setLoading(false);
         toast.error('Maximum of 6 images only');
     }   
+
+   const imgUrls = await Promise.all(
+    [...images].map((image)=> storeImage(image)))
+    .catch((error)=>{
+        setLoading(false);
+        toast.error("Images not Uploaded");
+        return;
+    })
+    const formDataCopy ={
+        ...formData,
+        imgUrls,
+        displayLatitude,
+        displayLongitude,
+        timestamp: serverTimestamp(),
+    };
+    delete formDataCopy.images;
+    delete formDataCopy.latitude;
+    delete formDataCopy.longitude;
+    delete formDataCopy.geoLatitude;
+    delete formDataCopy.geoLongitude;
+    !formDataCopy.offer && delete formDataCopy.discountedPrice;
+
+    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+    setLoading(false);
+    toast.success('Listing Created')
+    navigate(`/category/${formDataCopy.type}/${docRef.id}`)
+
+
 }
+
+
 
 if(loading){
     return(
         <Spinner/>
     )
 }
+
+
 
     return (
     <main className='max-w-md px-2  mx-auto'>
@@ -238,9 +344,59 @@ if(loading){
             focus:text-gray-700 focus:bg-white focus:border-slate-600 mb-6'/>
             
             
+        {/* Current Location Field for taking Latitude and Longitude */}
+
+        
+            <p className='text-lg font-semibold'>Use your current location</p>
+            <div className="flex mb-6">
+                <button
+                className={`mr-3 px-7 py-3 font-medium text-sm uppercase shadow-md rounded 
+                hover:shadow-lg focus:shadow-lg active:shadow-lg
+                transition duration -50 ease-in-out w-full
+                 ${!selectLocation? "bg-white text-black" : "bg-slate-600 text-white" } `} 
+                  value={true} onClick={()=>{setSelectLocation(true)
+                  setFormData((prevState)=>({
+                    ...prevState,
+                    displayLatitude: geoLatitude,
+                    displayLongitude: geoLongitude,
+                  }))
+                  setGeoLocationEnabled(true)
+                  }} type='button'>
+                    Yes
+                </button>
+                <button
+                className={`ml-3 px-7 py-3 font-medium text-sm uppercase shadow-md rounded 
+                hover:shadow-lg focus:shadow-lg active:shadow-lg
+                transition duration -50 ease-in-out w-full
+                 ${selectLocation? "bg-white text-black" : "bg-slate-600 text-white" } `} 
+                 id="offers" value={false} 
+                 onClick={(event)=>{
+                    event.preventDefault();
+                    setSelectLocation(false);
+                    setFormData((prevState)=>({
+                        ...prevState,
+                        displayLatitude: latitude,
+                        displayLongitude: longitude,
+                      }))
+                      setGeoLocationEnabled(false);
+
+
+                }}
+                 type='button'>
+                    No
+                </button>
+            </div>
+            
+            
+
+        
+
+
+
+
             
             {/* Latitude and Longitude Section */}
-            {!geoLocationEnabled && (
+            {!selectLocation && (
                 <div className='flex space-x-6 justify-start mb-6 '>
                     <div>
                         <p className='text-lg font-semibold'>Latitude</p>
