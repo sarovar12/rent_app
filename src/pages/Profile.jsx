@@ -1,17 +1,21 @@
-import React from 'react'
-import { useState } from 'react'
+import ListingItem from '../components/ListingItem';
 
+import React, { useEffect } from 'react'
+import { useState } from 'react'
 import { getAuth, updateProfile } from 'firebase/auth'
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import { doc, updateDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, orderBy, query, updateDoc, where, } from 'firebase/firestore'
 import db from '../firebase';
 import {FcHome} from 'react-icons/fc'
 import { Link } from 'react-router-dom';
 
+
 export default function Profile() {
   const auth = getAuth();
   const [changedDetail, setChangedDetail] = useState(false);
+  const [listings, setListings] = useState([])
+  const [loading,setLoading] = useState(true);
   const navigate = useNavigate();
 
   function onNameChange(event){
@@ -49,6 +53,44 @@ export default function Profile() {
         toast.error("Could not update the profile details")
       }
   }
+
+
+useEffect(()=>{
+  async function fetchUserListings(){
+    // console.log(auth.currentUser.uid)
+
+    const listingRef = collection(db,'listings');
+
+    // const q = query
+    //   (listingRef
+    //     ,where("userRef","==",auth.currentUser.uid),
+    // orderBy("timeStamp","desc")
+    // );
+
+    const q = query(
+      listingRef,
+      where("userRef", "==", auth.currentUser.uid),
+      orderBy("timestamp", "desc")  // Messed up the database by not using camelcase and wasted nearly 3 hours debugging
+    );
+
+
+    const querySnap = await getDocs(q);
+    let listings=[];
+    querySnap.forEach((doc) => {
+       listings.push({
+        id: doc.id,
+        data:doc.data(),
+        
+      })
+      // console.log(querySnap);
+      // console.log(doc.id, "=>",  doc.data())
+    });
+    setListings(listings);
+    setLoading(false);
+  }
+  fetchUserListings();
+},[auth.currentUser.uid])
+
   return (
     <>
 
@@ -91,7 +133,7 @@ export default function Profile() {
           </form>
           <button className='w-full bg-blue-600 text-white
            uppercase px-7 py-3 text-small font-medium rounded shadow-md hover:bg-blue-700
-           transition duration-150 ease-in-out hover: shadow-lg active:bg-blue-900' 
+           transition duration-150 ease-in-out hover:shadow-lg active:bg-blue-900' 
            type='submit'>
             <Link className='flex justify-center items-center' to ="/create-listing">
               <FcHome className='mr-2 text-3xl bg-red-200 rounded-full p-1 border-2'/>
@@ -101,6 +143,18 @@ export default function Profile() {
         </div>
 
       </section>
+      <div className='max-w-6xl px-3 mt-6 mx-auto'>
+        {!loading && listings.length> 0 && (
+          <>
+            <h2 className='text-2xl text-center font-semibold'>My Listings</h2>
+            <ul className=''>
+              {listings.map((listing)=>(
+                <ListingItem key={listing.id} id={listing.id} listing={listing.data}/>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
     </>
   )
 }

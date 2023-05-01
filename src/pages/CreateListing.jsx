@@ -173,6 +173,7 @@ async function storeImage(image){
 // On Submit Function
 
 async function onSubmit(event){
+    const auth = getAuth()
     event.preventDefault();
     setLoading(true);
     if(discountedPrice >= regularPrice){
@@ -198,6 +199,7 @@ async function onSubmit(event){
         imgUrls,
         displayLatitude,
         displayLongitude,
+        userRef: auth.currentUser.uid,
         timestamp: serverTimestamp(),
     };
     delete formDataCopy.images;
@@ -387,11 +389,6 @@ if(loading){
                 </button>
             </div>
             
-            
-
-        
-
-
 
 
             
