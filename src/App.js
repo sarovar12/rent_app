@@ -7,6 +7,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import PrivateRoute from './components/PrivateRoute';
 import Header from './components/Header';
+import EditListing from './pages/EditListing';
 
 import {ToastContainer} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
@@ -34,6 +35,12 @@ function App() {
           <Route path='/create-listing' element={<PrivateRoute/>}>
           <Route path='/create-listing' element={<CreateListing/>}/>
           </Route>
+
+        {/* Secured Route for Edit Listing */}
+          <Route path='/edit-listing' element={<PrivateRoute/>}>
+          <Route path='/edit-listing/:listingID' element={<EditListing/>}/>
+          </Route>
+
 
         </Routes>
      </Router>
