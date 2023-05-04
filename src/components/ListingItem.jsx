@@ -2,8 +2,10 @@ import React from 'react'
 import Moment from 'react-moment'
 import { Link } from 'react-router-dom'
 import {ImLocation} from 'react-icons/im'
+import {FcEditImage} from 'react-icons/fc'
+import {MdOutlineDelete} from 'react-icons/md'
 
-export default function ListingItem({listing,id}) {
+export default function ListingItem({listing,id, onDelete, onEdit}) {
   return (
     <li className=' m-[10px] relative bg-white flex flex-col justify-between items-center shadow-md hover:shadow-lg rounded-md
     overflow-hidden transition-shadow duration-150'>
@@ -30,15 +32,28 @@ export default function ListingItem({listing,id}) {
         .replace(/\B(?=(\d{3})+(?!\d))/g,",")}
         {listing.type === "rent" && " / month"}
         </p>
-        <div className='flex items-center mt-10px space-x-3'>
-          <div className='flex items-center space-x-1'>
+        <div className='flex  items-center mt-[10px]  mb-3 space-x-3'>
+          <div className='flex justify-start items-start space-x-1'>
             <p className='font-bold text-xs'>{listing.bedrooms >1 ? `${listing.bedrooms} Beds`:"1 Bed"}</p>
           </div>
-          <div className='flex items-center space-x-1'>
+          <div className='flex items-start space-x-1'>
             <p className='font-bold text-xs'>{listing.bathrooms >1 ? `${listing.bathrooms} Baths`:"1 Bath"}</p>
           </div>
+         
+          
         </div>
+    
       </Link>
+      {onEdit && (
+          <FcEditImage className='absolute bottom-2 right-2 h-[24px] cursor-pointer'
+          onClick={()=>onEdit(listing.id)} />
+         )}
+          
+         
+         {onDelete &&(
+          <MdOutlineDelete className='cursor-pointer absolute bottom-2 right-8 h-[24px]  text-red-500'
+          onClick={()=>onDelete(listing.id)}/>
+         )}
     </li>
 
   )
