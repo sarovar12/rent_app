@@ -5,7 +5,7 @@ import db from '../firebase';
 import Spinner from '../components/Spinner'
 import {Swiper , SwiperSlide} from 'swiper/react'
 import { EffectFade, Autoplay, Navigation,Pagination } from 'swiper';
-import {FaShare} from 'react-icons/fa'
+import {FaShare , FaMapMarkerAlt, FaBed, FaBath, FaParking ,FaChair} from 'react-icons/fa'
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -42,7 +42,7 @@ export default function Listing() {
       autoplay={{delay: 3000}}>
         {listing.imgUrls.map((url,index)=>(
           <SwiperSlide key={index}>
-            <div className='relative w-full overflow-hidden h-[300px]' 
+            <div className='relative w-[full] overflow-hidden h-[300px]' 
             style={{background:`url(${listing.imgUrls[index]}) center no-repeat`,
                     backgroundSize:"cover"}
             } > </div>
@@ -50,7 +50,7 @@ export default function Listing() {
         ))}
       </Swiper>
       <div className='fixed top-[13%] right-[3%] z-10 bg-white border-2 border-gray-400 
-      rounded-full w-12 h-12 flex  justify-center items-center cursor-pointer'
+      rounded-full w-12 h-10 flex  justify-center items-center cursor-pointer'
       onClick={()=>{
         navigator.clipboard.writeText(window.location.href)
         setSharedLinkCopied(true)
@@ -63,6 +63,60 @@ export default function Listing() {
         <p className='fixed top-[23%] right-[5%] font-semibold
         border-2 border-gray-400 rounded-md bg-white z-10 p-2'> Link Copied !!!</p>
       )}
+
+      {/* Description Part */}
+      <div className='m-4 p-4 rounded-lg shadow-lg bg-white flex flex-col md:flex-row max-w-6xl lg:mx-auto
+      lg:space-x-5'>
+
+        {/* Name of the propery and Price  */}
+        <div className='w-full h-[200px] lg-[400px]'>
+          <p className='text-2xl font-bold mb-3 text-blue-900'> {listing.name} - Rs.  {listing.offer ? listing.discountedPrice.toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g,",") : listing.regularPrice.toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g,",")}
+          {listing.type === 'rent' ? " /month" : ""}
+          </p>
+          {/* Address of the Property */}
+          <p className='flex items-center mt-6 mb-3 font-semibold'>
+          <FaMapMarkerAlt className='text-green-700 mr-1'/> {listing.address}
+          </p>
+
+          {/* Category and Discount  */}
+          <div className=' flex justify-start items-center space-x-4 w-[75%] '>
+            <p 
+            className='w-full font-semibold text-center max-w-[200px] rounded-md p-1 shadow-md h-[30px] bg-red-800 text-white'>{listing.type === 'rent'? "Rent" : "Sale"}</p>
+            {listing.offers &&(
+              <p className='bg-green-800  shadow-md w-full rounded p-1 text-center text-white font-semibold'>
+                Rs.{+listing.regularPrice - +listing.discountedPrice}  Discount
+              </p>
+            )}
+          </div>
+          {/* Description Section  */}
+          <p className='mt-3 mb-3'>
+           <span className='font-semibold'>Description-</span> {listing.description}</p>
+        
+          {/* Icons with Other information section */}
+          <ul className='flex w-full justify-between m-2 space-x-4'>
+          <li className='flex items-center whitespace-nowrap justify-center' >
+             <FaBed className='text-lg  mx-3'/>{listing.bedrooms>1 ?  `${listing.bedrooms} Beds`:` 1 Bed`}</li>
+          <li className='flex items-center whitespace-nowrap justify-center'>
+             <FaBath className='text-lg mx-3'/> {listing.bathrooms>1 ?  `${listing.bathrooms} Baths`:` 1 Bed`}</li>
+
+          <li className='flex items-center whitespace-nowrap justify-center' >
+             <FaParking className='text-lg mx-3'/> {listing.parking>1 ?  `No Parking`:`Parking Spot` }   </li>
+
+          <li className='flex items-center whitespace-nowrap justify-center'>
+          <FaChair className='text-lg mx-3'/> {listing.furnished? 'Furnished' : ' Not Furnished'}</li>   
+          </ul>
+       
+       
+        </div>
+        
+
+
+        {/* Map Part */}
+        <div className= 'w-full h-[200px] lg-[400px] z-10 overflow-x-hidden'></div>
+        </div>
+
     </main>
   )
 }

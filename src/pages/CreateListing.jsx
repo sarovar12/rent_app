@@ -207,7 +207,7 @@ async function onSubmit(event){
     delete formDataCopy.longitude;
     delete formDataCopy.geoLatitude;
     delete formDataCopy.geoLongitude;
-    !formDataCopy.offer && delete formDataCopy.discountedPrice;
+    !formDataCopy.offers && delete formDataCopy.discountedPrice;
 
     const docRef = await addDoc(collection(db, "listings"), formDataCopy);
     setLoading(false);
