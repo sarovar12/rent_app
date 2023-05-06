@@ -5,19 +5,23 @@ import db from '../firebase';
 import Spinner from '../components/Spinner'
 import {Swiper , SwiperSlide} from 'swiper/react'
 import { EffectFade, Autoplay, Navigation,Pagination } from 'swiper';
-import {FaShare , FaMapMarkerAlt, FaBed, FaBath, FaParking ,FaChair} from 'react-icons/fa'
+import {FaShare , FaMapMarkerAlt, FaBed, FaBath, FaParking ,FaChair} from 'react-icons/fa';
+import { getAuth } from 'firebase/auth'
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
+import Contact from '../components/Contact';
 
 
 
 export default function Listing() {
+  const auth = getAuth()
   const [listing,setListing] = useState();
   const [loading, setLoading] = useState(true);
   const [shareLinkCopied, setSharedLinkCopied] = useState(false) 
+  const [contactLandlord, setContactLandlord] = useState(false)
     const params = useParams()
     useEffect(()=>{
         async function fetchListing(){
@@ -66,10 +70,10 @@ export default function Listing() {
 
       {/* Description Part */}
       <div className='m-4 p-4 rounded-lg shadow-lg bg-white flex flex-col md:flex-row max-w-6xl lg:mx-auto
-      lg:space-x-5'>
+      lg:space-x-5 sm:w-full'>
 
         {/* Name of the propery and Price  */}
-        <div className='w-full h-[200px] lg-[400px]'>
+        <div className='w-full '>
           <p className='text-2xl font-bold mb-3 text-blue-900'> {listing.name} - Rs.  {listing.offer ? listing.discountedPrice.toString()
         .replace(/\B(?=(\d{3})+(?!\d))/g,",") : listing.regularPrice.toString()
         .replace(/\B(?=(\d{3})+(?!\d))/g,",")}
@@ -81,7 +85,7 @@ export default function Listing() {
           </p>
 
           {/* Category and Discount  */}
-          <div className=' flex justify-start items-center space-x-4 w-[75%] '>
+          <div className=' flex justify-start items-center space-x-4 w-[75%]  '>
             <p 
             className='w-full font-semibold text-center max-w-[200px] rounded-md p-1 shadow-md h-[30px] bg-red-800 text-white'>{listing.type === 'rent'? "Rent" : "Sale"}</p>
             {listing.offers &&(
@@ -95,19 +99,34 @@ export default function Listing() {
            <span className='font-semibold'>Description-</span> {listing.description}</p>
         
           {/* Icons with Other information section */}
-          <ul className='flex w-full justify-between m-2 space-x-4'>
+          <ul className=' flex justify-start align-middle break-all space-x-4 m-1 mb-6 max-sm:flex-col max-sm:my-auto  '>
           <li className='flex items-center whitespace-nowrap justify-center' >
-             <FaBed className='text-lg  mx-3'/>{listing.bedrooms>1 ?  `${listing.bedrooms} Beds`:` 1 Bed`}</li>
+             <FaBed className='text-lg sm:text-sm  mr-1'/>{listing.bedrooms>1 ?  `${listing.bedrooms} Beds`:` 1 Bed`}</li>
           <li className='flex items-center whitespace-nowrap justify-center'>
-             <FaBath className='text-lg mx-3'/> {listing.bathrooms>1 ?  `${listing.bathrooms} Baths`:` 1 Bed`}</li>
+             <FaBath className='text-lg mr-1'/> {listing.bathrooms>1 ?  `${listing.bathrooms} Baths`:` 1 Bed`}</li>
 
           <li className='flex items-center whitespace-nowrap justify-center' >
-             <FaParking className='text-lg mx-3'/> {listing.parking>1 ?  `No Parking`:`Parking Spot` }   </li>
+             <FaParking className='text-lg mr-1'/> {listing.parking>1 ?  `No Parking`:`Parking Spot` }   </li>
 
-          <li className='flex items-center whitespace-nowrap justify-center'>
-          <FaChair className='text-lg mx-3'/> {listing.furnished? 'Furnished' : ' Not Furnished'}</li>   
+          <li className='flex break-normal md:break-all items-center whitespace-nowrap justify-center'>
+          <FaChair className='text-lg mr-1'/> {listing.furnished? 'Furnished' : ' Not Furnished'}</li>   
           </ul>
-       
+          {listing.userRef !== auth.currentUser?.uid && !contactLandlord && (
+             <div className="mt-6 ">
+             <button onClick={()=>setContactLandlord(true)} className='w-full rounded bg-blue-600 text-white m-2 px-7 py-3 font-medium text-sm uppercase
+           shadow-md hover:bg-blue-700 hover:shadow-lg transtion duration-150 ease-in-out '>
+             Contact Landlord
+           </button>
+             </div>   
+          )}
+          {
+            contactLandlord && (
+              <Contact userRef={listing.userRef}
+              listing={listing}/>
+            )
+          }
+         
+        
        
         </div>
         
