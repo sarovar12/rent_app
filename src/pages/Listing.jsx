@@ -145,7 +145,7 @@ export default function Listing() {
     />
     <Marker position={[listing.displayLatitude, listing.displayLongitude]}>
       <Popup>
-        A pretty CSS3 popup. <br/> Easily customizable.
+        Location of the Property
       </Popup>
     </Marker>
   </MapContainer>
