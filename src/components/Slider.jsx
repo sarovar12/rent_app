@@ -30,7 +30,7 @@ export default function Slider() {
         })
         setListings(listings);
         setLoading(false);
-        console.log(listings[0].data.imgUrls[0]);
+        // console.log(listings[0].data.imgUrls[0]);
     } 
       fetchListings();
     },[])
