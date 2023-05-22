@@ -13,6 +13,7 @@ import {ToastContainer} from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css';
 import CreateListing from './pages/CreateListing';
 import Listing from './pages/Listing';
+import Category from './pages/Category';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path='/sign-up' element={<SignUp/>}/>
           <Route path='/forgot-password' element={<ForgotPassWord/>}/>
           <Route path='/discounts' element={<Discounts/>}/>
+          <Route path='/category/:categoryName/' element={<Category/>}/>
           <Route path='/category/:categoryName/:listingID' element={<Listing/>}/>
 
           {/* Secured Routing */}
